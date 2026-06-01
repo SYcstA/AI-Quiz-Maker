@@ -24,17 +24,6 @@
   <!-- Unified toast container -->
   <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- V3 Promo Banner -->
-  <div id="v3Banner" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center py-2.5 px-4 text-sm flex items-center justify-center gap-2 flex-wrap">
-    <span>🚀 <strong>AI Quiz Maker V3 Desktop</strong> is here! Run completely offline with Local AI and bypass browser limits.</span>
-    <a href="https://github.com/SYcstA/AI-Quiz-Maker" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-full font-medium text-white text-xs transition whitespace-nowrap">
-      <i class="fab fa-github"></i> Download from GitHub
-    </a>
-    <button id="dismissV3Banner" class="ml-1 p-1 rounded-full hover:bg-white/20 transition text-white/80 hover:text-white" title="Dismiss">
-      <i class="fas fa-times text-xs"></i>
-    </button>
-  </div>
-
   <div class="w-full max-w-4xl mx-auto">
     <!-- Theme Toggle -->
     <div class="flex justify-end items-center gap-3 mb-4">
@@ -389,23 +378,6 @@
       <div id="tutorialArrow" class="absolute w-3 h-3 bg-white dark:bg-gray-800 rotate-45"></div>
     </div>
   </div>
-
-  <!-- V3 Banner Dismiss Script -->
-  <script>
-    (function() {
-      const banner = document.getElementById('v3Banner');
-      const dismissBtn = document.getElementById('dismissV3Banner');
-      if (banner && dismissBtn) {
-        if (localStorage.getItem('v3BannerDismissed') === 'true') {
-          banner.style.display = 'none';
-        }
-        dismissBtn.addEventListener('click', function() {
-          banner.style.display = 'none';
-          localStorage.setItem('v3BannerDismissed', 'true');
-        });
-      }
-    })();
-  </script>
 
   <!-- External Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
