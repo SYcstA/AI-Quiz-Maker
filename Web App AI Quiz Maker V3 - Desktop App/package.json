@@ -1,0 +1,55 @@
+{
+  "name": "ai-quiz-maker",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently -k \"npm run dev\" \"npx wait-on tcp:5173 && set NODE_ENV=development&& node_modules\\electron\\dist\\electron.exe .\"",
+    "electron:build": "vite build && electron-builder --win",
+    "electron:start": "electron ."
+  },
+  "build": {
+    "appId": "com.osvaldo.quizmaker",
+    "productName": "AI Quiz Maker",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon-256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^35.1.2",
+    "electron-builder": "^26.0.12",
+    "lucide": "^1.17.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.16",
+    "vite": "npm:rolldown-vite@7.1.14",
+    "wait-on": "^8.0.3"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@7.1.14"
+  },
+  "dependencies": {
+    "jwt-decode": "^4.0.0",
+    "mammoth": "^1.12.0"
+  }
+}
