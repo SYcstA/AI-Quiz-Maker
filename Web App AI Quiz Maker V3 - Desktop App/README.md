@@ -1,182 +1,292 @@
-# 🧠 AI Quiz Maker
+# 🧠 AI Quiz Maker V3 — Desktop App
 
-> Transform your study material into interactive quizzes instantly using AI.
+> **The flagship desktop application.** An Electron-based AI quiz generator that runs natively on Windows, bypasses browser limitations, and supports fully offline AI — no database, no cloud dependency.
 
-> **🔗 Live Demo:** [https://quiz.soosvaldo.my.id/](https://quiz.soosvaldo.my.id/) *(Note: demo instance may be unstable/outdated)*
->
-> **⚠️ No Database** — Aplikasi ini **100% tanpa database**. Semua data tetap lokal di komputer pengguna. Tidak ada data yang dikirim atau disimpan di server manapun selain AI API calls.
+## 📌 Purpose in This Monorepo
 
-AI Quiz Maker is a powerful web application that generates customized quizzes from any text or document (PDF/DOCX). Perfect for students, educators, and self-learners who want to test their knowledge efficiently.
+V3 is the **most advanced version** of AI Quiz Maker. Built on Electron, it takes everything V2 achieved and elevates it to a native desktop experience. It eliminates browser CORS restrictions, enables local file system access for larger file uploads (20MB), supports fully offline AI via LM Studio/Ollama, and can be packaged as a standalone Windows installer. **100% private — all data stays on your machine.**
+
+---
 
 ## ✨ Key Features
 
 ### 🎯 Core Functionality
-- **AI-Powered Quiz Generation** — Paste text or upload PDF/DOCX files, and let Google Gemini AI create a complete quiz with multiple-choice questions, answer rationales, and scoring.
-- **Multiple Input Methods** — Type or paste material directly, or upload files up to 10MB (PDF & DOCX supported).
-- **Customizable Difficulty** — Choose between Easy, Normal, or Hard difficulty levels to match your learning stage.
-- **Flexible Question Count** — Quick-select [5, 10, 15, 20] questions or set a custom number (max 30).
+| Feature | Description |
+|---|---|
+| **Multi-Provider AI** | Google Gemini, OpenAI-compatible (OpenAI, DeepSeek, Groq, Together AI, NVIDIA NIM), **Anthropic Claude**, and **Local AI** (LM Studio, Ollama) |
+| **Text Input** | Paste study material (min. 50 characters) — up to ~15,000 characters passed to AI |
+| **File Upload** | PDF/DOCX up to **20MB** (double V2's limit) — parsed client-side with real-time progress |
+| **3 Difficulty Levels** | Easy (recall), Normal (comprehension), Hard (application/analysis) |
+| **Dynamic Question Limits** | Up to **50 questions** in desktop mode — bypasses browser API timeout restrictions |
+| **Interactive Quiz** | Shuffled options, click-to-answer with instant color-coded feedback and rationale |
+| **Live Scoring** | Real-time score counter with confetti animation on perfect score |
+| **Regeneration** | Full modal with focus, difficulty, and count controls — reuses source material |
 
-### 🔐 Authentication & Security
-- **Google OAuth 2.0** — Secure login with your Google account.
-- **Session Management** — Auto-expiry after 1 hour of inactivity.
-- **Rate Limiting** — 10 requests per 3 minutes to prevent abuse.
-- **18+ Content Filter** — Built-in adult content detection.
+### 📥 Export Options
+| Export Type | Format | Description |
+|---|---|---|
+| **Summary** | `.txt` | Single document with questions + answers combined |
+| **Separated** | `.zip` | Two separate files (Questions + Answer Key) — ideal for printing |
+
+### 🖥️ Desktop-Exclusive Advantages
+| Advantage | Why It Matters |
+|---|---|
+| **No CORS Restrictions** | Browser cross-origin restrictions eliminated — all AI API calls work seamlessly |
+| **Fully Offline Mode** | Run completely offline with **Local AI** (LM Studio/Ollama) — no internet required |
+| **20MB File Limit** | Double the browser's 10MB limit for document uploads |
+| **50-Question Maximum** | Bypasses browser timeout limits on long AI API calls |
+| **Rate Limiting Disabled** | No artificial request caps — generate as many quizzes as you want |
+| **No Google Auth Required** | No sign-in needed — just launch and use |
+| **Native Window** | Standalone window with minimize/maximize/close, taskbar integration |
+| **DevTools Access** | Built-in Chrome DevTools for debugging (F12) |
+| **Portable & Installable** | Packaged as a Windows installer — no browser needed |
 
 ### 🎨 User Experience
-- **Interactive Tutorial** — 5-step walkthrough for first-time users (30-day cookie expiry).
-- **Confirmation Modals** — Prevent accidental data loss with stylish confirmation dialogs.
-- **Dark Mode** — Toggle between light and dark themes.
-- **Responsive Design** — Works perfectly on desktop, tablet, and mobile.
-- **Confetti Animation** — Celebrate perfect scores with confetti effects.
-
-### 📥 Export & Sharing
-- **Download Results** — Export quiz results as a formatted `.txt` file.
-- **Regenerate** — Create new quizzes from the same material with different settings.
+- **Dark Mode** — Toggle between light and dark themes (persisted in localStorage)
+- **Interactive Tutorial** — 5-step guided walkthrough (30-day cookie expiry)
+- **Confirmation Modals** — Prevent accidental data loss
+- **Toast Notifications** — Non-intrusive feedback for all actions
+- **Loading Overlay** — Animated progress bar during generation
+- **Drag & Drop** — Full drag-and-drop file upload with visual feedback
+- **Responsive Layout** — Scales to any window size
 
 ## 🛠️ Tech Stack
 
-| Technology | Purpose |
+| Category | Technology |
 |---|---|
-| **Frontend** | Vanilla JavaScript, HTML5, CSS3 |
+| **Desktop Shell** | **Electron** v35.1.2 |
+| **Frontend** | Vanilla JavaScript (ES Modules), HTML5, CSS3 |
 | **Styling** | Tailwind CSS (CDN) |
-| **Build Tool** | Vite |
-| **Backend** | PHP 7.4+ |
-| **AI API** | Google Gemini API |
-| **Auth** | Google OAuth 2.0 (Identity Services) |
-| **File Parsing** | pdf.js, mammoth.js |
+| **Build Tool** | Vite + electron-builder |
+| **AI Providers** | Google Gemini, OpenAI-compatible, Anthropic Claude, Local AI (LM Studio/Ollama) |
+| **File Parsing** | PDF.js (PDF), Mammoth.js (DOCX) |
+| **Export** | JSZip (ZIP), custom `.txt` formatter |
 | **Icons** | Font Awesome 6 |
-| **Animations** | Canvas Confetti |
+| **Animation** | Canvas Confetti |
+| **Packaging** | electron-builder (NSIS installer) |
+
+## 🏗️ Architecture Overview
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                    Electron App                           │
+│                                                          │
+│  ┌──────────────────────┐   ┌────────────────────────┐  │
+│  │   Main Process        │   │   Renderer Process     │  │
+│  │   (electron/main.cjs) │◄──┤   (index.html + Vite)  │  │
+│  │                       │IPC│                        │  │
+│  │  - Window management  │   │  - UI rendering        │  │
+│  │  - File dialogs       │   │  - Quiz logic          │  │
+│  │  - App lifecycle      │   │  - AI provider calls   │  │
+│  │  - Native features    │   │  - File processing     │  │
+│  └──────────────────────┘   └────────┬───────────────┘  │
+│                                      │                  │
+│                            ┌─────────▼───────────┐     │
+│                            │   AI Providers       │     │
+│                            │   ┌───────────────┐  │     │
+│                            │   │ Gemini        │  │     │
+│                            │   │ OpenAI        │  │     │
+│                            │   │ Anthropic     │  │     │
+│                            │   │ Local AI      │  │     │
+│                            │   └───────┬───────┘  │     │
+│                            └───────────┼──────────┘     │
+└────────────────────────────────────────┼────────────────┘
+                                         │
+                                 ┌───────▼────────┐
+                                 │  External APIs  │
+                                 │  (via HTTPS)    │
+                                 │  Gemini         │
+                                 │  OpenAI         │
+                                 │  Anthropic      │
+                                 │  LM Studio      │
+                                 └────────────────┘
+```
+
+### Process Architecture
+- **Main Process** (`electron/main.cjs`):
+  - Creates and manages the BrowserWindow
+  - Handles app lifecycle (ready, window-all-closed, activate)
+  - Configures window bounds, icon, and title
+  - Sets Content-Security-Policy for security
+  - Launches dev server URL or loads built files
+
+- **Preload Script** (`electron/preload.cjs`):
+  - Exposes limited APIs to renderer via `contextBridge`
+  - Provides `electronAPI.isDesktop` flag for runtime mode detection
+  - Maintains security by not exposing full Node.js APIs
+
+- **Renderer Process** (Vite-built web app):
+  - Same codebase as V2
+  - Detects desktop mode via `window.electronAPI?.isDesktop`
+  - **Bypasses CORS** — `webSecurity: false` in main process
+  - **No rate limiting** — disabled when `env-check.js` detects desktop mode
+  - **No Google Auth** — login overlay never shows in desktop mode
+
+## 🤖 AI Provider System
+
+Identical to V2's provider system with a registry pattern:
+
+| Provider | Default Model | Requires Key | Offline? |
+|---|---|---|---|
+| **Default AI** | `gemini-3-flash-preview` | No (demo key) | No |
+| **Gemini** | `gemini-3-flash-preview` | Yes | No |
+| **OpenAI** | `gpt-4o-mini` | Yes | No |
+| **Anthropic** | `claude-3-5-haiku-latest` | Yes | No |
+| **Local AI** | User-configured | No | **Yes ✅** |
+
+### Local AI (LM Studio / Ollama)
+- Connect to `http://localhost:1234/v1` (LM Studio) or `http://localhost:11434/v1` (Ollama)
+- Click **"Fetch Models"** to auto-discover available models
+- Works completely offline — no internet connection required
+- No API key needed — runs on your own hardware
+
+## 🖥️ Desktop-Specific Features
+
+### Window Management
+- Default size: **1200×800** (centered on screen)
+- Custom icon (icon-256.png) for taskbar and title bar
+- Resizable, minimizable, maximizable
+- DevTools accessible via F12 / Ctrl+Shift+I
+- Graceful close handling via `window-all-closed` event
+
+### File System Access
+- **20MB file upload limit** (vs 10MB in browser)
+- Uses native `<input type="file">` dialog (no security restrictions)
+- File content extracted client-side — never leaves the machine
+
+### No CORS
+- Electron `webSecurity: false` disables same-origin policy
+- All AI API endpoints work without CORS configuration
+- No need for proxy servers or backend workarounds
+
+### Privacy Mode
+- **Never requires login** — no Google OAuth popup
+- **No rate limiting** — generate unlimited quizzes
+- **No session expiry** — stays logged in (though there's no login)
+- All data stays in `localStorage` and in-memory
+
+## 🤖 How Quiz Generation Works
+
+1. User provides study material (text paste or PDF/DOCX upload)
+2. `document-processor.js` extracts text client-side (PDF.js / Mammoth.js)
+3. `main.js` validates (≥50 chars) and checks content filter
+4. `quiz-generator.js` builds a structured prompt with material + difficulty + count
+5. Selected provider's `generate()` function fires the API call
+6. In desktop mode: **no rate limit check, no Google auth check**
+7. AI returns JSON array of `{ question, options[], correctAnswer, rationale }`
+8. Quiz rendered with shuffled options, instant feedback, live scoring
+9. Results downloadable as `.txt` (summary) or `.zip` (separated)
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Development
+```bash
+# Prerequisites: Node.js 16+ and npm
 
-- **Node.js** v16+ and npm (for local development with Vite)
-- **PHP** 7.4+ with cURL enabled (for backend API)
-- **Web Server** Apache/Nginx or PHP built-in server
-- **Google Cloud Account** (for OAuth credentials & Gemini API key)
+# Enter V3 directory
+cd "Web App AI Quiz Maker V3 - Desktop App"
 
-### Installation
+# Install dependencies
+npm install
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SYcstA/AI-Quiz-Maker.git
-   cd AI-Quiz-Maker
-   ```
+# Run in development mode (Vite dev server + Electron window)
+npm run electron:dev
+```
 
-2. **Install frontend dependencies**
-   ```bash
-   npm install
-   ```
+### Build Installer
+```bash
+npm run electron:build
+# Output: dist_electron/AI Quiz Maker Setup 1.0.0.exe
+```
 
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   Then edit `.env` and replace the placeholder values with your actual credentials:
+The installer is a standalone Windows executable. Just run it and follow the setup wizard — no browser, no web server, no PHP required.
 
-   ```env
-   GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-   GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID"
-   GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
-   AI_MODEL="gemini-1.5-flash"
-   ```
+### Environment Setup
+```bash
+cp .env.example .env
+# VITE_APP_MODE=desktop
+# VITE_GEMINI_API_KEY="your-key-here"
+# VITE_DEFAULT_MODEL="gemini-3-flash-preview"
+# VITE_MAX_QUESTIONS=30
+```
 
-4. **Get your API credentials**
-
-   **Google Gemini API Key:**
-   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Click "Create API Key" and copy your key
-
-   **Google OAuth 2.0 Credentials:**
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select existing one
-   - Navigate to APIs & Services → Credentials
-   - Click "Create Credentials" → "OAuth 2.0 Client ID"
-   - Set Application Type to "Web Application"
-   - Add authorized JavaScript origins (e.g., `http://localhost:5173`)
-   - Copy the Client ID and Client Secret
-
-5. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-   The app will be available at `http://localhost:5173`
-
-6. **(Optional) Start PHP backend**
-   ```bash
-   php -S localhost:8000
-   ```
-
-### Production Deployment
-
-1. Build the frontend:
-   ```bash
-   npm run build
-   ```
-2. Deploy the `dist/` folder along with the `api/` directory to your web server.
-3. Ensure the `.env` file is properly configured on your server.
-4. Set the `CORS_ORIGIN` environment variable to your domain.
+### Using Local AI (Fully Offline)
+1. Install [LM Studio](https://lmstudio.ai/) or [Ollama](https://ollama.ai/)
+2. Download a model (e.g., Llama 3, Mistral, Phi-3)
+3. Start the local inference server
+4. In the app, click ⚙️ **Settings** → **Local AI**
+5. Enter endpoint (e.g., `http://localhost:1234/v1`)
+6. Click **Fetch Models** → select model → **Save**
+7. Generate quizzes entirely offline — no internet needed
 
 ## 📂 Project Structure
 
 ```
-AI-Quiz-Maker/
-├── api/                  # PHP backend
-│   ├── config.php        # Configuration endpoint
-│   ├── generate-quiz.php # Quiz generation endpoint
-│   ├── auth-verify.php   # Google token verification
-│   ├── debug.php         # Debug dashboard
-│   └── load_env.php      # .env file parser
-├── public/               # Static assets
-│   ├── assets/           # Images, icons
-│   └── fonts/            # Custom fonts
-├── src/                  # Frontend source
-│   ├── main.js           # Entry point
-│   ├── style.css         # Global styles
-│   ├── auth/             # Authentication logic
-│   ├── api/              # API client
-│   ├── quiz/             # Quiz rendering
-│   ├── ui/               # UI components
-│   └── utils/            # Utilities
-├── index.html            # Main HTML file
-├── main.js               # Main application logic
-├── .env.example          # Environment template
-└── package.json          # Dependencies
+Web App AI Quiz Maker V3 - Desktop App/
+├── electron/                    # Electron main process
+│   ├── main.cjs                 # Main process entry (window, lifecycle, IPC)
+│   ├── preload.cjs              # Preload script (contextBridge, security)
+│   └── run-dev.cmd              # Development launcher script
+├── public/                      # Static assets (icons)
+├── src/
+│   ├── ai/                      # AI provider system
+│   │   ├── provider-registry.js       # Provider registration & lookup
+│   │   ├── quiz-generator.js          # Quiz generation orchestration
+│   │   ├── settings-manager.js        # Provider settings UI
+│   │   └── providers/
+│   │       ├── gemini.js              # Google Gemini provider
+│   │       ├── openai.js              # OpenAI-compatible provider
+│   │       └── local.js               # Local AI (LM Studio/Ollama)
+│   ├── utils/
+│   │   ├── document-processor.js      # PDF/DOCX text extraction
+│   │   └── env-check.js              # Environment detection (web vs desktop)
+│   └── style.css                     # Global styles
+├── index.html                   # Main HTML (all components + V3 banner)
+├── main.js                      # App entry point (bundled by Vite)
+├── icon-256.png                 # Application icon (256x256)
+├── icon.ico                     # Windows icon resource
+├── icon.png                     # Source icon
+├── .env.example                 # Environment template
+├── package.json                 # Dependencies & scripts
+├── vite.config.js               # Vite + Electron configuration
+└── tailwind.config.js           # Tailwind configuration
 ```
 
-## 🔮 Coming Soon
+## 📦 Packaging & Distribution
 
-- **🔄 BYOM (Bring Your Own Model)** — Choose from multiple AI providers (OpenAI, Claude, etc.)
-- **📱 Offline Support** — Generate quizzes without internet connection using on-device AI
-- **📊 Analytics Dashboard** — Track your learning progress over time
-- **🌍 Multi-language Support** — Generate quizzes in different languages
-- **📝 Edit Quiz** — Manually review and edit generated questions before answering
-- **🏆 Leaderboards** — Compare scores with friends and classmates
+### Current Build
+- **Installer:** `dist_electron/AI Quiz Maker Setup 1.0.0.exe`
+- **Platform:** Windows (NSIS installer)
+- **Electron:** v35.1.2
+- **Size:** ~80MB (includes Chromium runtime)
 
-## 🤝 Contributing
+### Build Configuration
+```json
+{
+  "appId": "com.osvaldo.quizmaker",
+  "productName": "AI Quiz Maker",
+  "win": {
+    "target": "nsis",
+    "icon": "icon-256.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true
+  }
+}
+```
 
-Contributions are welcome! Feel free to open issues or submit pull requests.
+## ⚠️ Privacy & Data
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+**100% private. No database. No telemetry.** All data is:
+- **localStorage** — API keys, provider preferences, theme, tutorial progress
+- **In-memory** — Quiz state, uploaded file content, scores
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Google Gemini API](https://ai.google.dev/) for powering quiz generation
-- [Tailwind CSS](https://tailwindcss.com/) for the utility-first styling
-- [pdf.js](https://mozilla.github.io/pdf.js/) and [Mammoth.js](https://github.com/mwilliamson/mammoth.js) for document parsing
-- [Font Awesome](https://fontawesome.com/) for beautiful icons
+**Data is never sent anywhere except:**
+- Your chosen **AI Provider API** (study material + prompt) — for quiz generation
+- Or **nowhere at all** — if you use Local AI, everything stays on your machine
 
 ---
 
-<p align="center">
-  Made with ❤️ for learners everywhere
-</p>
+> **Built with ❤️ by So Osvaldo.**
+> V3 is the culmination of the AI Quiz Maker journey — from PHP-powered web app to a fully offline, privacy-first desktop application.

@@ -1,182 +1,228 @@
-# 🧠 AI Quiz Maker
+# 🧠 AI Quiz Maker V2 — Web App
 
-> Transform your study material into interactive quizzes instantly using AI.
+> **The enhanced web application.** A zero-backend, multi-provider AI quiz generator that transforms study material into interactive multiple-choice quizzes — entirely in your browser.
 
-> **🔗 Live Demo:** [https://quiz.soosvaldo.my.id/](https://quiz.soosvaldo.my.id/) *(Note: demo instance may be unstable/outdated)*
->
-> **⚠️ No Database** — Aplikasi ini **100% tanpa database**. Semua data tetap lokal di browser pengguna. Tidak ada data yang dikirim atau disimpan di server manapun selain AI API calls.
+> 🔗 **Live Demo:** [https://quiz.soosvaldo.my.id/](https://quiz.soosvaldo.my.id/)
 
-AI Quiz Maker is a powerful web application that generates customized quizzes from any text or document (PDF/DOCX). Perfect for students, educators, and self-learners who want to test their knowledge efficiently.
+## 📌 Purpose in This Monorepo
+
+V2 represents the **major evolution** from V1. It eliminates the PHP backend dependency, introduces a **pluggable multi-provider AI system** (Gemini, OpenAI, Anthropic, Local AI), adds advanced export options (ZIP), and implements a polished UI with dark mode, tutorials, and real-time feedback. All data stays local — **no database, no server-side storage**.
+
+---
 
 ## ✨ Key Features
 
 ### 🎯 Core Functionality
-- **AI-Powered Quiz Generation** — Paste text or upload PDF/DOCX files, and let Google Gemini AI create a complete quiz with multiple-choice questions, answer rationales, and scoring.
-- **Multiple Input Methods** — Type or paste material directly, or upload files up to 10MB (PDF & DOCX supported).
-- **Customizable Difficulty** — Choose between Easy, Normal, or Hard difficulty levels to match your learning stage.
-- **Flexible Question Count** — Quick-select [5, 10, 15, 20] questions or set a custom number (max 30).
+| Feature | Description |
+|---|---|
+| **Multi-Provider AI** | Choose from **Google Gemini**, **OpenAI-compatible** (OpenAI, DeepSeek, Groq, Together AI, NVIDIA NIM), **Anthropic Claude**, or **Local AI** (LM Studio, Ollama) |
+| **Text Input** | Paste study material (min. 50 characters) as quiz source |
+| **File Upload** | Upload PDF/DOCX files up to 10MB — parsed entirely client-side with progress |
+| **3 Difficulty Levels** | Easy, Normal, Hard — affects AI prompt complexity |
+| **Dynamic Question Limits** | Up to **30 questions** (default) or up to **50 questions** when using your own API key or Local AI |
+| **Interactive Quiz Display** | Shuffled options, click-to-answer with instant color-coded feedback and rationale display |
+| **Live Score Tracking** | Real-time score counter with confetti animation on perfect score |
+| **Regeneration** | Modal with focus (all topics / improvement areas), difficulty, and count controls — reuses source material |
 
-### 🔐 Authentication & Security
-- **Google OAuth 2.0** — Secure login with your Google account.
-- **Session Management** — Auto-expiry after 1 hour of inactivity.
-- **Rate Limiting** — 10 requests per 3 minutes to prevent abuse.
-- **18+ Content Filter** — Built-in adult content detection.
+### 📥 Export Options
+| Export Type | Format | Description |
+|---|---|---|
+| **Summary** | `.txt` | Single document with questions + answers combined |
+| **Separated** | `.zip` | Two separate files (Questions + Answer Key) — ideal for printing test papers |
 
 ### 🎨 User Experience
-- **Interactive Tutorial** — 5-step walkthrough for first-time users (30-day cookie expiry).
-- **Confirmation Modals** — Prevent accidental data loss with stylish confirmation dialogs.
-- **Dark Mode** — Toggle between light and dark themes.
-- **Responsive Design** — Works perfectly on desktop, tablet, and mobile.
-- **Confetti Animation** — Celebrate perfect scores with confetti effects.
+- **Dark Mode** — Toggle between light and dark themes (persisted in localStorage)
+- **Interactive Tutorial** — 5-step guided walkthrough for first-time users (30-day cookie expiry)
+- **Confirmation Modals** — Prevent accidental data loss on reset/back actions
+- **Toast Notifications** — Non-intrusive feedback for all actions
+- **Loading Overlay** — Animated progress bar during quiz generation
+- **Drag & Drop** — Drag-and-drop file upload zone with visual feedback
+- **Responsive Design** — Works on desktop, tablet, and mobile
 
-### 📥 Export & Sharing
-- **Download Results** — Export quiz results as a formatted `.txt` file.
-- **Regenerate** — Create new quizzes from the same material with different settings.
+### 🔐 Authentication & Security
+- **Google OAuth 2.0** — Secure login with Google account (web mode only)
+- **Session Management** — Auto-expiry after 1 hour of inactivity
+- **Rate Limiting** — 10 requests per 3 minutes (configurable, disabled in desktop mode)
+- **18+ Content Filter** — Built-in adult content detection and blocking
 
 ## 🛠️ Tech Stack
 
-| Technology | Purpose |
+| Category | Technology |
 |---|---|
-| **Frontend** | Vanilla JavaScript, HTML5, CSS3 |
-| **Styling** | Tailwind CSS (CDN) |
+| **Frontend** | Vanilla JavaScript (ES Modules), HTML5, CSS3 |
+| **Styling** | Tailwind CSS (CDN via `cdn.tailwindcss.com`) |
 | **Build Tool** | Vite |
-| **Backend** | PHP 7.4+ |
-| **AI API** | Google Gemini API |
-| **Auth** | Google OAuth 2.0 (Identity Services) |
-| **File Parsing** | pdf.js, mammoth.js |
+| **AI Providers** | Google Gemini, OpenAI-compatible, Anthropic Claude, Local AI (LM Studio, Ollama) |
+| **Authentication** | Google OAuth 2.0 (Identity Services) |
+| **File Parsing** | PDF.js (PDF), Mammoth.js (DOCX) |
+| **Export** | JSZip (ZIP generation), custom `.txt` formatter |
 | **Icons** | Font Awesome 6 |
-| **Animations** | Canvas Confetti |
+| **Animation** | Canvas Confetti |
+| **Runtime** | Browser (no Node.js server, no PHP) |
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Browser (100% Client-Side)            │
+│                                                         │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
+│  │ main.js      │  │ src/ai/      │  │ src/utils/    │  │
+│  │ (Orchestrator)│  │ provider-   │  │ document-    │  │
+│  │              │  │ registry.js  │  │ processor.js │  │
+│  │ index.html   │  │ quiz-       │  │ env-check.js  │  │
+│  │ (UI Layout)  │  │ generator.js│  │               │  │
+│  └─────────────┘  │ settings-    │  └───────────────┘  │
+│                    │ manager.js   │                     │
+│                    └──────┬───────┘                     │
+│                           │                             │
+│                    ┌──────▼───────┐                     │
+│                    │  AI Providers │                     │
+│                    │  ┌─────────┐  │                     │
+│                    │  │ Gemini  │  │                     │
+│                    │  ├─────────┤  │                     │
+│                    │  │ OpenAI  │  │                     │
+│                    │  ├─────────┤  │                     │
+│                    │  │ Anthropic│ │                     │
+│                    │  ├─────────┤  │                     │
+│                    │  │ Local AI│  │                     │
+│                    │  └─────────┘  │                     │
+│                    └──────┬───────┘                     │
+│                           │                             │
+└───────────────────────────┼─────────────────────────────┘
+                            │
+                    ┌───────▼────────┐
+                    │  External APIs │
+                    │  (Direct HTTP) │
+                    │  Gemini        │
+                    │  OpenAI        │
+                    │  Anthropic     │
+                    │  LM Studio     │
+                    └────────────────┘
+```
+
+### Key Architecture Decisions
+- **Zero Backend** — No PHP, no Node.js server. The browser communicates directly with AI APIs
+- **Client-Side File Processing** — PDF.js and Mammoth.js run entirely in the browser — files never leave the user's machine
+- **Provider Abstraction** — All AI providers implement a common interface (`async generate(prompt, apiKey, model)`), making it trivial to add new providers
+- **localStorage Persistence** — API keys, provider preferences, theme settings, and tutorial progress are stored in localStorage
+
+## 🤖 AI Provider System
+
+The provider system uses a **registry pattern** (`src/ai/provider-registry.js`):
+
+### Built-in Providers
+| Provider | Source | Requires API Key | Default Model |
+|---|---|---|---|
+| **Default AI** | Hardcoded Gemini key | No (uses built-in demo key) | `gemini-3-flash-preview` |
+| **Gemini** | Google AI Studio | Yes | `gemini-3-flash-preview` |
+| **OpenAI** | OpenAI / DeepSeek / Groq / Together / NVIDIA | Yes | `gpt-4o-mini` |
+| **Anthropic** | Anthropic Console | Yes | `claude-3-5-haiku-latest` |
+| **Local AI** | LM Studio / Ollama (localhost) | No (free, local) | User-configured |
+
+### Each Provider Exposes
+- `name` — Display name
+- `id` — Unique identifier
+- `description` — Short description
+- `models` — Array of supported model names
+- `defaultModel` — Default model selection
+- `requiresKey` — Whether an API key is mandatory
+- `hasEndpoint` — Whether a custom endpoint URL can be configured
+- `generate(prompt, apiKey, model, endpoint)` — The generation function
+
+### Settings Manager (`src/ai/settings-manager.js`)
+- Handles saving/loading provider preferences from localStorage
+- Manages API key visibility toggle
+- Supports "Test Connection" to validate API keys before saving
+- Dynamically shows/hides configuration fields based on selected provider
+
+## 🤖 How Quiz Generation Works
+
+1. **Input Collection** — User pastes text or uploads PDF/DOCX (extracted by PDF.js/Mammoth.js)
+2. **Validation** — Material must be ≥ 50 characters; rate limiter checked (web mode); content filter scanned
+3. **Prompt Construction** — `quiz-generator.js` builds a structured prompt containing the material, difficulty level, and requested question count
+4. **Provider Selection** — User's chosen provider is loaded from localStorage via `provider-registry.js`
+5. **API Call** — `provider.generate(prompt, apiKey, model, endpoint)` fires a direct HTTP request to the AI API
+6. **Response Parsing** — AI returns JSON with `{ question, options[], correctAnswer, rationale }` for each question
+7. **Quiz Rendering** — Questions displayed one at a time with shuffled options; instant feedback on selection
+8. **Scoring** — Live score tracked; confetti on perfect score; results downloadable as `.txt` or `.zip`
+
+## 🔐 Authentication (Web Mode Only)
+
+Google OAuth 2.0 is **optional** in V2 (required in V1). The app works in two modes:
+- **Web Mode** — Requires Google login. Uses PHP backend for auth verification. Rate limiting active (10 req/3 min). Session expires after 1 hour
+- **Desktop/Electron Mode** — No authentication required. Rate limiting disabled. CORS bypassed via Electron's web security settings
+
+## ⚠️ Privacy & Data
+
+**No database. No server-side storage.** All data is:
+- **localStorage** — API keys, provider preferences, theme, tutorial progress, auth tokens
+- **In-memory** — Current quiz state, score, uploaded file content
+
+Data is only sent to:
+- **Selected AI Provider API** (study material + prompt) — for quiz generation
+- **Google OAuth 2.0** — for login (web mode only)
 
 ## 🚀 Getting Started
 
-### Prerequisites
+```bash
+# Prerequisites: Node.js 16+ and npm
 
-- **Node.js** v16+ and npm (for local development with Vite)
-- **PHP** 7.4+ with cURL enabled (for backend API)
-- **Web Server** Apache/Nginx or PHP built-in server
-- **Google Cloud Account** (for OAuth credentials & Gemini API key)
+# Clone and enter V2
+cd "Web App AI Quiz Maker V2"
 
-### Installation
+# Install dependencies
+npm install
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SYcstA/AI-Quiz-Maker.git
-   cd AI-Quiz-Maker
-   ```
+# Configure environment
+cp .env.example .env
+# Edit .env with your preferred AI provider API keys
 
-2. **Install frontend dependencies**
-   ```bash
-   npm install
-   ```
+# Start development server
+npm run dev
+```
 
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   Then edit `.env` and replace the placeholder values with your actual credentials:
+### Using Your Own AI Provider
+1. Click the ⚙️ **Settings** button (top-right)
+2. Select your preferred AI provider (Gemini, OpenAI, Anthropic, or Local AI)
+3. Enter your **API key** (or skip for Local AI)
+4. Select a **model** from the dropdown
+5. Click **Test Connection** to verify
+6. Click **Save Settings**
 
-   ```env
-   GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-   GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID"
-   GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
-   AI_MODEL="gemini-1.5-flash"
-   ```
-
-4. **Get your API credentials**
-
-   **Google Gemini API Key:**
-   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Click "Create API Key" and copy your key
-
-   **Google OAuth 2.0 Credentials:**
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select existing one
-   - Navigate to APIs & Services → Credentials
-   - Click "Create Credentials" → "OAuth 2.0 Client ID"
-   - Set Application Type to "Web Application"
-   - Add authorized JavaScript origins (e.g., `http://localhost:5173`)
-   - Copy the Client ID and Client Secret
-
-5. **Run the development server**
-   ```bash
-   npm run dev
-   ```
-   The app will be available at `http://localhost:5173`
-
-6. **(Optional) Start PHP backend**
-   ```bash
-   php -S localhost:8000
-   ```
-
-### Production Deployment
-
-1. Build the frontend:
-   ```bash
-   npm run build
-   ```
-2. Deploy the `dist/` folder along with the `api/` directory to your web server.
-3. Ensure the `.env` file is properly configured on your server.
-4. Set the `CORS_ORIGIN` environment variable to your domain.
+### Using Local AI (Fully Offline)
+1. Install [LM Studio](https://lmstudio.ai/) or [Ollama](https://ollama.ai/)
+2. Start the local server (LM Studio: port 1234; Ollama: port 11434)
+3. In V2 Settings, select **Local AI** and enter the endpoint URL (e.g., `http://localhost:1234/v1`)
+4. Click **Fetch Models** to auto-detect available models
+5. Select a model and save
 
 ## 📂 Project Structure
 
 ```
-AI-Quiz-Maker/
-├── api/                  # PHP backend
-│   ├── config.php        # Configuration endpoint
-│   ├── generate-quiz.php # Quiz generation endpoint
-│   ├── auth-verify.php   # Google token verification
-│   ├── debug.php         # Debug dashboard
-│   └── load_env.php      # .env file parser
-├── public/               # Static assets
-│   ├── assets/           # Images, icons
-│   └── fonts/            # Custom fonts
-├── src/                  # Frontend source
-│   ├── main.js           # Entry point
-│   ├── style.css         # Global styles
-│   ├── auth/             # Authentication logic
-│   ├── api/              # API client
-│   ├── quiz/             # Quiz rendering
-│   ├── ui/               # UI components
-│   └── utils/            # Utilities
-├── index.html            # Main HTML file
-├── main.js               # Main application logic
-├── .env.example          # Environment template
-└── package.json          # Dependencies
+Web App AI Quiz Maker V2/
+├── public/                  # Static assets (icons)
+├── src/
+│   ├── ai/                  # AI provider system
+│   │   ├── provider-registry.js   # Provider registration & lookup
+│   │   ├── quiz-generator.js      # Quiz generation orchestration
+│   │   ├── settings-manager.js    # Provider settings UI & persistence
+│   │   └── providers/
+│   │       ├── gemini.js          # Google Gemini provider
+│   │       ├── openai.js          # OpenAI-compatible provider
+│   │       └── local.js           # Local AI provider (LM Studio/Ollama)
+│   ├── utils/
+│   │   ├── document-processor.js  # PDF/DOCX text extraction
+│   │   └── env-check.js          # Environment & mode detection
+│   └── style.css                 # Global styles
+├── index.html               # Main HTML (all components, modals, overlays)
+├── main.js                  # App entry point (2300+ lines)
+├── .env.example             # Environment template
+├── package.json             # Dependencies & scripts
+├── vite.config.js           # Vite configuration
+└── tailwind.config.js       # Tailwind configuration
 ```
-
-## 🔮 Coming Soon
-
-- **🔄 BYOM (Bring Your Own Model)** — Choose from multiple AI providers (OpenAI, Claude, etc.)
-- **📱 Offline Support** — Generate quizzes without internet connection using on-device AI
-- **📊 Analytics Dashboard** — Track your learning progress over time
-- **🌍 Multi-language Support** — Generate quizzes in different languages
-- **📝 Edit Quiz** — Manually review and edit generated questions before answering
-- **🏆 Leaderboards** — Compare scores with friends and classmates
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Google Gemini API](https://ai.google.dev/) for powering quiz generation
-- [Tailwind CSS](https://tailwindcss.com/) for the utility-first styling
-- [pdf.js](https://mozilla.github.io/pdf.js/) and [Mammoth.js](https://github.com/mwilliamson/mammoth.js) for document parsing
-- [Font Awesome](https://fontawesome.com/) for beautiful icons
 
 ---
 
-<p align="center">
-  Made with ❤️ for learners everywhere
-</p>
+> **Next:** For offline desktop capabilities (CORS bypass, file system access, native installer), check out **V3 (Desktop App)**.
