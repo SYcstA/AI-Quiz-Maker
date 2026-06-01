@@ -5,6 +5,5 @@ release/
 .env
 .DS_Store
 *.log
-# V1 specific sensitive files
-Web App AI Quiz Maker V1/client_secret_*.json
-Web App AI Quiz Maker V1/config.ini
+client_secret_*.json
+config.ini
