@@ -9,7 +9,7 @@
  * Application menu removed for cleaner UI.
  */
 
-const { app, BrowserWindow, Menu } = require('electron');
+const { app, BrowserWindow, Menu, globalShortcut } = require('electron');
 const path = require('path');
 
 let mainWindow = null;
@@ -17,6 +17,9 @@ let mainWindow = null;
 function createWindow() {
   // Remove default Electron menu for a cleaner app look
   Menu.setApplicationMenu(null);
+
+  // Determine icon path for both dev and production
+  const iconPath = path.join(__dirname, '..', 'icon-256.png');
 
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -30,11 +33,11 @@ function createWindow() {
       contextIsolation: true,
       webSecurity: false,
     },
-    icon: path.join(__dirname, '..', 'public', 'icon.png'),
+    icon: iconPath,
   });
 
   if (app.isPackaged) {
-    // Production: load built files, no DevTools
+    // Production: load built files
     mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   } else {
     // Development: load Vite dev server with DevTools
@@ -45,7 +48,21 @@ function createWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+
+  // Register F12 to toggle DevTools in both dev and production
+  globalShortcut.register('F12', () => {
+    if (mainWindow) {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
+});
+
+app.on('will-quit', () => {
+  // Unregister all shortcuts when app quits
+  globalShortcut.unregisterAll();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
